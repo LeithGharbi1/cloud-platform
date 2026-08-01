@@ -3,17 +3,6 @@
   hosts: all
   become: true
 
-  tasks: 
-    - name: Update packages
-      apt:
-        update_cache: yes
-
-    - name: Install common tools
-      apt:
-        name:
-          - curl
-          - wget
-          - vim
-          - git
-          - net-tools
-        state: present
+  roles: 
+    - common
+    - container_runtime
