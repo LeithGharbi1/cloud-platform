@@ -5,14 +5,15 @@
 
 - name: Install common packages
   apt:
-    name:
-      - curl
-      - wget
-      - vim
-      - git
-      - htop
-      - net-tools
+    name: "{{ common_packages }}"
     state: present
 
-- name: Disable swap
+- name: Disable swap immediately if active
   command: swapoff -a
+  when: ansible_swaptotal_mb > 0
+
+- name: Disable swap permanently
+  replace:
+    path: /etc/fstab
+    regexp: '^([^#].*\sswap\s.*)$'
+    replace: '# \1'

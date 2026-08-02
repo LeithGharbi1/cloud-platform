@@ -1,0 +1,17 @@
+---
+- name: Kubernetes prerequisites
+  include_tasks: prerequisites.yml
+
+
+- name: Install Kubernetes packages
+  include_tasks: install.yml
+
+
+- name: Initialize control plane
+  include_tasks: master.yml
+  when: inventory_hostname in groups['control_plane']
+
+
+- name: Join workers
+  include_tasks: workers.yml
+  when: inventory_hostname in groups['workers']
