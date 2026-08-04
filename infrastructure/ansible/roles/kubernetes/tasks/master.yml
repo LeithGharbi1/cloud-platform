@@ -1,4 +1,5 @@
 ---
+
 - name: Initialize Kubernetes cluster
   command: >
     kubeadm init
@@ -34,7 +35,49 @@
     mode: '0644'
 
 
+- name: Wait for Kubernetes API server
+  command: kubectl get nodes
+  environment:
+    KUBECONFIG: /home/vagrant/.kube/config
+  register: api_ready
+  retries: 10
+  delay: 10
+  until: api_ready.rc == 0
+  changed_when: false
+
+
 - name: Install Calico CNI plugin
   command: kubectl apply -f /tmp/calico.yml
   environment:
     KUBECONFIG: /home/vagrant/.kube/config
+  register: calico_apply
+  changed_when: >
+    'created' in calico_apply.stdout or
+    'configured' in calico_apply.stdout
+
+
+- name: Check if kubeadm join command exists
+  stat:
+    path: /etc/kubernetes/kubeadm_join_command
+  register: join_command_file
+
+
+- name: Generate kubeadm join command
+  command: kubeadm token create --ttl 0 --print-join-command
+  register: kubeadm_join_command
+  changed_when: false
+  when: not join_command_file.stat.exists
+
+
+- name: Save join command fact
+  set_fact:
+    worker_join_command: "{{ kubeadm_join_command.stdout }}"
+  when: not join_command_file.stat.exists
+
+
+- name: Save join command for workers
+  copy:
+    content: "{{ worker_join_command }}"
+    dest: /etc/kubernetes/kubeadm_join_command
+    mode: '0600'
+  when: not join_command_file.stat.exists
