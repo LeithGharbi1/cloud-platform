@@ -6,6 +6,12 @@ kubernetes_packages:
   - kubeadm
   - kubectl
 
+kubernetes_apt_packages:
+  - apt-transport-https
+  - ca-certificates
+  - curl
+  - gpg
+  
 kubernetes_apt_repository: "https://pkgs.k8s.io/core:/stable:/v{{ kubernetes_version }}/deb/"
 
 pod_network_cidr: "192.168.0.0/16"

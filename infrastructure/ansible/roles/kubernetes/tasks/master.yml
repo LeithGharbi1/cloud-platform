@@ -1,0 +1,40 @@
+---
+- name: Initialize Kubernetes cluster
+  command: >
+    kubeadm init
+    --apiserver-advertise-address={{ control_plane_endpoint }}
+    --pod-network-cidr={{ pod_network_cidr }}
+  args:
+    creates: /etc/kubernetes/admin.conf
+
+
+- name: Create .kube directory
+  file:
+    path: /home/vagrant/.kube
+    state: directory
+    owner: vagrant
+    group: vagrant
+    mode: '0755'
+
+
+- name: Copy kubeconfig
+  copy:
+    src: /etc/kubernetes/admin.conf
+    dest: /home/vagrant/.kube/config
+    remote_src: yes
+    owner: vagrant
+    group: vagrant
+    mode: '0644'
+
+
+- name: Copy Calico manifest
+  copy:
+    src: calico.yml
+    dest: /tmp/calico.yml
+    mode: '0644'
+
+
+- name: Install Calico CNI plugin
+  command: kubectl apply -f /tmp/calico.yml
+  environment:
+    KUBECONFIG: /home/vagrant/.kube/config

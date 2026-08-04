@@ -5,12 +5,12 @@ Vagrant.configure("2") do |config|
   # Disable default shared folder
   config.vm.synced_folder ".", "/vagrant", disabled: true
 
-  nodes = {
-    "ansible-controller" => { ip: "192.168.56.5", memory: 2048 },
-    "master"             => { ip: "192.168.56.10", memory: 4096 },
-    "worker1"            => { ip: "192.168.56.11", memory: 4096 },
-    "worker2"            => { ip: "192.168.56.12", memory: 4096 }
-  }
+nodes = {
+  "ansible-controller" => { ip:"192.168.56.5", memory:2048, cpus:2 },
+  "master" => { ip:"192.168.56.10", memory:6144, cpus:4 },
+  "worker1" => { ip:"192.168.56.11", memory:4096, cpus:2 },
+  "worker2" => { ip:"192.168.56.12", memory:4096, cpus:2 }
+}
 
   nodes.each do |name, node_config|
 
@@ -29,7 +29,7 @@ Vagrant.configure("2") do |config|
       node.vm.provider "virtualbox" do |vb|
         vb.name = name
         vb.memory = node_config[:memory]
-        vb.cpus = 2
+        vb.cpus = node_config[:cpus] || 2
       end
 
       node.vm.provision "shell", inline: <<-SHELL

@@ -3,7 +3,15 @@
   hosts: all
   become: true
 
-  roles: 
-    - common
-    - container_runtime
-    - kubernetes
+  roles:
+    - role: common
+      tags:
+        - common
+
+    - role: container_runtime
+      tags:
+        - containerd
+
+    - role: kubernetes
+      tags:
+        - kubernetes
