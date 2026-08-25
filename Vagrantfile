@@ -24,6 +24,8 @@ nodes = {
  # Mount Ansible project only inside controller
       if name == "ansible-controller"
         node.vm.synced_folder "infrastructure/ansible", "/home/vagrant/ansible"
+        node.vm.synced_folder "apps", "/home/vagrant/apps"
+
       end
 
       node.vm.provider "virtualbox" do |vb|
