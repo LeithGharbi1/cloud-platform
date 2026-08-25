@@ -2,4 +2,15 @@
 *.log
 *.tmp
 *.retry
+#
 notes.txt
+# Terraform
+**/.terraform/
+*.tfstate
+*.tfstate.*
+*.tfvars
+!*.tfvars.example
+*.tfplan
+
+# Terraform CLI installer
+*.msi
