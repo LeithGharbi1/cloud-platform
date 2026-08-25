@@ -1,0 +1,3 @@
+---
+- name: Install ingress controller
+  ansible.builtin.include_tasks: ingress.yml

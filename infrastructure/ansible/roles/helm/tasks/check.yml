@@ -1,0 +1,45 @@
+---
+- name: Determine Helm architecture
+  ansible.builtin.set_fact:
+    helm_arch: "{{ helm_arch_map[ansible_architecture] }}"
+
+
+- name: Check if Helm exists
+  ansible.builtin.stat:
+    path: "{{ helm_binary_path }}"
+  register: helm_binary
+
+
+- name: Get installed Helm version
+  ansible.builtin.command:
+    cmd: "{{ helm_binary_path }} version --short"
+  register: installed_helm
+  changed_when: false
+  failed_when: false
+  when: helm_binary.stat.exists
+
+
+- name: Extract installed Helm version
+  ansible.builtin.set_fact:
+    installed_helm_version: "{{ installed_helm.stdout | regex_search('v[0-9]+\\.[0-9]+\\.[0-9]+') }}"
+  when:
+    - helm_binary.stat.exists
+    - installed_helm.stdout is defined
+
+
+- name: Decide if Helm installation is required
+  ansible.builtin.set_fact:
+    helm_install_required: >-
+      {{
+        (not helm_binary.stat.exists)
+        or
+        (installed_helm_version != helm_version)
+      }}
+
+
+- name: Display Helm status
+  ansible.builtin.debug:
+    msg:
+      - "Current Helm version: {{ installed_helm_version | default('not installed') }}"
+      - "Required Helm version: {{ helm_version }}"
+      - "Installation required: {{ helm_install_required }}"

@@ -1,7 +1,26 @@
 ---
+
+# Prepare Ansible controller
+- name: Prepare Ansible controller
+  hosts: localhost
+  connection: local
+  become: true
+  gather_facts: true
+
+  roles:
+    - role: ansible_controller
+      tags:
+        - controller
+    - role: platform_services
+      tags:
+        - platform
+
+
+# Prepare cloud platform nodes
 - name: Prepare cloud platform nodes
   hosts: all
   become: true
+  gather_facts: true
 
   roles:
     - role: common
@@ -15,3 +34,5 @@
     - role: kubernetes
       tags:
         - kubernetes
+
+

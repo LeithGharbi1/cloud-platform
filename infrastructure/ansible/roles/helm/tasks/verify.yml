@@ -1,0 +1,11 @@
+---
+- name: Verify Helm installation
+  ansible.builtin.command:
+    cmd: "{{ helm_binary_path }} version --short"
+  register: helm_version_output
+  changed_when: false
+
+
+- name: Display Helm version
+  ansible.builtin.debug:
+    msg: "{{ helm_version_output.stdout }}"

@@ -1,0 +1,79 @@
+---
+- name: Install required packages
+  ansible.builtin.apt:
+    name:
+      - curl
+      - tar
+      - gzip
+    state: present
+    update_cache: true
+
+
+- name: Remove previous Helm temporary files
+  ansible.builtin.file:
+    path: "{{ helm_tmp_dir }}"
+    state: absent
+
+
+- name: Create Helm temporary directory
+  ansible.builtin.file:
+    path: "{{ helm_tmp_dir }}"
+    state: directory
+    mode: "0755"
+
+
+- name: Download Helm archive using curl
+  ansible.builtin.command:
+    cmd: >
+      curl
+      --fail
+      --location
+      --retry 5
+      --retry-delay 10
+      --connect-timeout 30
+      --max-time 300
+      -o {{ helm_archive_path }}
+      {{ helm_download_url }}
+  args:
+    creates: "{{ helm_archive_path }}"
+
+
+- name: Verify Helm archive checksum
+  ansible.builtin.stat:
+    path: "{{ helm_archive_path }}"
+    checksum_algorithm: sha256
+  register: helm_archive_checksum
+
+
+- name: Validate Helm checksum
+  ansible.builtin.assert:
+    that:
+      - helm_archive_checksum.stat.checksum == helm_checksum_value
+    fail_msg: "Helm archive checksum verification failed"
+
+
+- name: Validate Helm archive
+  ansible.builtin.command:
+    cmd: "tar -tzf {{ helm_archive_path }}"
+  changed_when: false
+
+
+- name: Extract Helm archive
+  ansible.builtin.unarchive:
+    src: "{{ helm_archive_path }}"
+    dest: "{{ helm_tmp_dir }}"
+    remote_src: true
+
+
+- name: Install Helm binary
+  ansible.builtin.copy:
+    src: "{{ helm_tmp_dir }}/{{ helm_os }}-{{ helm_arch }}/helm"
+    dest: "{{ helm_binary_path }}"
+    remote_src: true
+    mode: "0755"
+
+
+- name: Remove Helm temporary directory
+  ansible.builtin.file:
+    path: "{{ helm_tmp_dir }}"
+    state: absent

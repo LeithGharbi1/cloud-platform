@@ -1,0 +1,12 @@
+---
+- name: Check Helm installation
+  ansible.builtin.import_tasks: check.yml
+
+
+- name: Install or upgrade Helm
+  ansible.builtin.import_tasks: install.yml
+  when: helm_install_required
+
+
+- name: Verify Helm installation
+  ansible.builtin.import_tasks: verify.yml

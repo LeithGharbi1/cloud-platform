@@ -27,7 +27,28 @@
     group: vagrant
     mode: '0644'
 
+- name: Fetch kubeconfig to controller
+  fetch:
+    src: /etc/kubernetes/admin.conf
+    dest: /tmp/admin.conf
+    flat: true
 
+- name: Create kube directory on controller
+  delegate_to: localhost
+  become: false
+  file:
+    path: ~/.kube
+    state: directory
+    mode: "0700"
+
+- name: Configure kubeconfig on controller
+  delegate_to: localhost
+  become: false
+  copy:
+    src: /tmp/admin.conf
+    dest: ~/.kube/config
+    mode: "0600"
+    
 - name: Copy Calico manifest
   copy:
     src: calico.yml
