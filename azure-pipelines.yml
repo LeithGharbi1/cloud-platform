@@ -105,6 +105,14 @@ stages:
             --name $(aksClusterName) \
             --overwrite-existing
 
+          echo "Converting kubeconfig for Azure CLI authentication..."
+
+          kubelogin convert-kubeconfig -l azurecli
+
+          echo "Testing AKS access..."
+
+          kubectl auth can-i create deployments -n $(namespace)
+
           echo "Deploying image:"
           echo "$(acrLoginServer)/$(imageRepository):$(imageTag)"
 
@@ -116,26 +124,3 @@ stages:
             --set image.tag=$(imageTag) \
             --wait \
             --timeout 5m
-
-    - task: AzureCLI@2
-      displayName: 'Verify Deployment'
-      inputs:
-        azureSubscription: 'cloud-platform-pipeline'
-        scriptType: bash
-        scriptLocation: inlineScript
-        inlineScript: |
-
-          echo "=== Pods ==="
-          kubectl get pods -n $(namespace)
-
-          echo ""
-          echo "=== Deployment ==="
-          kubectl get deployment -n $(namespace)
-
-          echo ""
-          echo "=== Service ==="
-          kubectl get service -n $(namespace)
-
-          echo ""
-          echo "=== Helm Release ==="
-          helm status $(helmRelease) -n $(namespace)
