@@ -93,6 +93,10 @@ stages:
         scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
+          set -e
+
+          echo "Installing kubelogin..."
+          az aks install-cli
 
           echo "Getting AKS credentials..."
 
