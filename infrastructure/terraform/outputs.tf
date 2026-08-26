@@ -13,3 +13,15 @@ output "vnet_address_space" {
 output "aks_subnet_id" {
   value = azurerm_subnet.aks.id
 }
+
+output "aks_cluster_name" {
+  value = azurerm_kubernetes_cluster.cloud_platform.name
+}
+
+output "aks_kubernetes_version" {
+  value = azurerm_kubernetes_cluster.cloud_platform.kubernetes_version
+}
+
+output "aks_fqdn" {
+  value = azurerm_kubernetes_cluster.cloud_platform.fqdn
+}
