@@ -35,15 +35,33 @@ stages:
 
     - checkout: self
 
-    - task: Docker@2
-      displayName: 'Build and Push Image'
+    - task: AzureCLI@2
+      displayName: 'Build and Push Image to ACR'
       inputs:
-        command: buildAndPush
-        repository: $(imageRepository)
-        dockerfile: 'apps/demo-app/Dockerfile'
-        containerRegistry: 'cloud-platform-pipeline'
-        tags: |
-          $(imageTag)
+        azureSubscription: 'cloud-platform-pipeline'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+
+          echo "Logging into ACR..."
+
+          az acr login \
+            --name acrcloudplatformdev01
+
+          echo "Building image..."
+
+          docker build \
+            -t $(acrLoginServer)/$(imageRepository):$(imageTag) \
+            apps/demo-app
+
+          echo "Pushing image..."
+
+          docker push \
+            $(acrLoginServer)/$(imageRepository):$(imageTag)
+
+          echo "Successfully pushed:"
+          echo "$(acrLoginServer)/$(imageRepository):$(imageTag)"
+
 
 # ============================================================
 # CD
@@ -57,23 +75,11 @@ stages:
   jobs:
 
   - job: DeployToAKS
-    displayName: 'Helm Deploy'
+    displayName: 'Deploy with Helm'
 
     steps:
 
     - checkout: self
-
-    - task: AzureCLI@2
-      displayName: 'Get AKS Credentials'
-      inputs:
-        azureSubscription: 'cloud-platform-pipeline'
-        scriptType: bash
-        scriptLocation: inlineScript
-        inlineScript: |
-          az aks get-credentials \
-            --resource-group $(aksResourceGroup) \
-            --name $(aksClusterName) \
-            --overwrite-existing
 
     - task: HelmInstaller@1
       displayName: 'Install Helm'
@@ -81,12 +87,19 @@ stages:
         helmVersionToInstall: 'latest'
 
     - task: AzureCLI@2
-      displayName: 'Deploy Helm Chart'
+      displayName: 'Deploy Helm Chart to AKS'
       inputs:
         azureSubscription: 'cloud-platform-pipeline'
         scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
+
+          echo "Getting AKS credentials..."
+
+          az aks get-credentials \
+            --resource-group $(aksResourceGroup) \
+            --name $(aksClusterName) \
+            --overwrite-existing
 
           echo "Deploying image:"
           echo "$(acrLoginServer)/$(imageRepository):$(imageTag)"
@@ -116,9 +129,9 @@ stages:
           kubectl get deployment -n $(namespace)
 
           echo ""
-          echo "=== Services ==="
+          echo "=== Service ==="
           kubectl get service -n $(namespace)
 
           echo ""
-          echo "=== Helm ==="
+          echo "=== Helm Release ==="
           helm status $(helmRelease) -n $(namespace)
