@@ -25,3 +25,11 @@ output "aks_kubernetes_version" {
 output "aks_fqdn" {
   value = azurerm_kubernetes_cluster.cloud_platform.fqdn
 }
+
+output "acr_name" {
+  value = azurerm_container_registry.cloud_platform.name
+}
+
+output "acr_login_server" {
+  value = azurerm_container_registry.cloud_platform.login_server
+}

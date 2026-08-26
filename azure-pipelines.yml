@@ -1,0 +1,124 @@
+trigger:
+  branches:
+    include:
+      - main
+
+pool:
+  vmImage: ubuntu-latest
+
+variables:
+  acrLoginServer: 'acrcloudplatformdev01.azurecr.io'
+  imageRepository: 'demo-app'
+  imageTag: '$(Build.BuildId)'
+
+  aksResourceGroup: 'rg-cloud-platform-dev'
+  aksClusterName: 'aks-cloud-platform-dev'
+
+  namespace: 'helm-test'
+  helmRelease: 'demo-app'
+
+stages:
+
+# ============================================================
+# CI
+# ============================================================
+
+- stage: Build
+  displayName: 'Build and Push Docker Image'
+
+  jobs:
+
+  - job: BuildAndPush
+    displayName: 'Build Docker Image'
+
+    steps:
+
+    - checkout: self
+
+    - task: Docker@2
+      displayName: 'Build and Push Image'
+      inputs:
+        command: buildAndPush
+        repository: $(imageRepository)
+        dockerfile: 'apps/demo-app/Dockerfile'
+        containerRegistry: 'cloud-platform-pipeline'
+        tags: |
+          $(imageTag)
+
+# ============================================================
+# CD
+# ============================================================
+
+- stage: Deploy
+  displayName: 'Deploy to AKS'
+  dependsOn: Build
+  condition: succeeded()
+
+  jobs:
+
+  - job: DeployToAKS
+    displayName: 'Helm Deploy'
+
+    steps:
+
+    - checkout: self
+
+    - task: AzureCLI@2
+      displayName: 'Get AKS Credentials'
+      inputs:
+        azureSubscription: 'cloud-platform-pipeline'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+          az aks get-credentials \
+            --resource-group $(aksResourceGroup) \
+            --name $(aksClusterName) \
+            --overwrite-existing
+
+    - task: HelmInstaller@1
+      displayName: 'Install Helm'
+      inputs:
+        helmVersionToInstall: 'latest'
+
+    - task: AzureCLI@2
+      displayName: 'Deploy Helm Chart'
+      inputs:
+        azureSubscription: 'cloud-platform-pipeline'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+
+          echo "Deploying image:"
+          echo "$(acrLoginServer)/$(imageRepository):$(imageTag)"
+
+          helm upgrade --install $(helmRelease) \
+            apps/demo-app-chart \
+            --namespace $(namespace) \
+            --create-namespace \
+            --set image.repository=$(acrLoginServer)/$(imageRepository) \
+            --set image.tag=$(imageTag) \
+            --wait \
+            --timeout 5m
+
+    - task: AzureCLI@2
+      displayName: 'Verify Deployment'
+      inputs:
+        azureSubscription: 'cloud-platform-pipeline'
+        scriptType: bash
+        scriptLocation: inlineScript
+        inlineScript: |
+
+          echo "=== Pods ==="
+          kubectl get pods -n $(namespace)
+
+          echo ""
+          echo "=== Deployment ==="
+          kubectl get deployment -n $(namespace)
+
+          echo ""
+          echo "=== Services ==="
+          kubectl get service -n $(namespace)
+
+          echo ""
+          echo "=== Helm ==="
+          helm status $(helmRelease) -n $(namespace)

@@ -4,17 +4,22 @@ resource "azurerm_kubernetes_cluster" "cloud_platform" {
   resource_group_name = azurerm_resource_group.cloud_platform.name
   dns_prefix          = "aks-cloud-platform-dev"
 
-  kubernetes_version = "1.30"
+  kubernetes_version = "1.34"
 
   default_node_pool {
     name           = "system"
     node_count     = 1
-    vm_size        = "Standard_B2s"
+    vm_size        = "standard_b4s_v2"
     vnet_subnet_id = azurerm_subnet.aks.id
   }
 
   identity {
     type = "SystemAssigned"
+  }
+
+  azure_active_directory_role_based_access_control {
+    tenant_id          = "604f1a96-cbe8-43f8-abbf-f8eaf5d85730"
+    azure_rbac_enabled = true
   }
 
   network_profile {
