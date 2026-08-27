@@ -14,3 +14,6 @@ notes.txt
 
 # Terraform CLI installer
 *.msi
+
+monitoring-current-values.txt
+monitoring-manifest.yaml

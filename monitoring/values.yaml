@@ -1,0 +1,5 @@
+# kube-prometheus-stack
+# Installed using Helm chart defaults.
+#
+# Custom values can be added here when platform-specific
+# monitoring configuration is introduced.
