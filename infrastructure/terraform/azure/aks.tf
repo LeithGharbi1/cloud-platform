@@ -1,16 +1,19 @@
+data "azurerm_client_config" "current" {}
+
 resource "azurerm_kubernetes_cluster" "cloud_platform" {
-  name                = "aks-cloud-platform-dev"
+  name                = "aks-${local.name_prefix}"
   location            = azurerm_resource_group.cloud_platform.location
   resource_group_name = azurerm_resource_group.cloud_platform.name
-  dns_prefix          = "aks-cloud-platform-dev"
+  dns_prefix          = "aks-${local.name_prefix}"
 
-  kubernetes_version = "1.34"
+  kubernetes_version = var.kubernetes_version
 
   default_node_pool {
     name           = "system"
-    node_count     = 1
-    vm_size        = "standard_b4s_v2"
+    node_count     = var.aks_node_count
+    vm_size        = var.aks_vm_size
     vnet_subnet_id = azurerm_subnet.aks.id
+
     upgrade_settings {
       max_surge = "10%"
     }
@@ -21,7 +24,7 @@ resource "azurerm_kubernetes_cluster" "cloud_platform" {
   }
 
   azure_active_directory_role_based_access_control {
-    tenant_id          = "604f1a96-cbe8-43f8-abbf-f8eaf5d85730"
+    tenant_id          = data.azurerm_client_config.current.tenant_id
     azure_rbac_enabled = true
   }
 

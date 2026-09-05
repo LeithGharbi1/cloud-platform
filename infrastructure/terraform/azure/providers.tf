@@ -6,20 +6,9 @@ terraform {
       source  = "hashicorp/azurerm"
       version = "~> 4.0"
     }
-
-    helm = {
-      source  = "hashicorp/helm"
-      version = "~> 3.0"
-    }
   }
 }
 
 provider "azurerm" {
   features {}
-}
-
-provider "helm" {
-  kubernetes = {
-    config_path = "~/.kube/config"
-  }
 }

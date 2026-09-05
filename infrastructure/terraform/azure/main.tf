@@ -1,10 +1,14 @@
+locals {
+  name_prefix = "${var.project_name}-${var.environment}"
+}
+
 resource "azurerm_resource_group" "cloud_platform" {
-  name     = "rg-cloud-platform-dev"
+  name     = "rg-${local.name_prefix}"
   location = var.location
 }
 
 resource "azurerm_virtual_network" "cloud_platform" {
-  name                = "vnet-cloud-platform-dev"
+  name                = "vnet-${local.name_prefix}"
   location            = azurerm_resource_group.cloud_platform.location
   resource_group_name = azurerm_resource_group.cloud_platform.name
 
