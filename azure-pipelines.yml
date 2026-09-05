@@ -38,7 +38,7 @@ stages:
     - task: AzureCLI@2
       displayName: 'Build and Push Image to ACR'
       inputs:
-        azureSubscription: 'cloud-platform-pipeline'
+        azureSubscription: 'github-actions-cloud-platform'
         scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
@@ -89,7 +89,7 @@ stages:
     - task: AzureCLI@2
       displayName: 'Deploy Helm Chart to AKS'
       inputs:
-        azureSubscription: 'cloud-platform-pipeline'
+        azureSubscription: 'github-actions-cloud-platform'
         scriptType: bash
         scriptLocation: inlineScript
         inlineScript: |
